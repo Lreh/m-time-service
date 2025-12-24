@@ -29,12 +29,6 @@ java {
     targetCompatibility = JavaVersion.toVersion("17")
 }
 
-// Optional: specific image naming
-tasks.named("dockerBuild") {
-    images = ["lrehakdocker/time-service:v1"]
-}
-
-
 graalvmNative.toolchainDetection = false
 
 micronaut {
@@ -65,5 +59,3 @@ if (project.hasProperty("micronaut.docker.image")) {
         images = [project.property("micronaut.docker.image")]
     }
 }
-
-
