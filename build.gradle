@@ -59,5 +59,11 @@ micronaut {
 
 }
 
+// This allows the pipeline to override the image name via -P command line
+if (project.hasProperty("micronaut.docker.image")) {
+    tasks.named("dockerBuild") {
+        images = [project.property("micronaut.docker.image")]
+    }
+}
 
 

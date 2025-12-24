@@ -1,0 +1,46 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ] # Runs every time you push to main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        run: |
+          # Use GITHUB_SHA as a unique image tag
+          ./gradlew dockerPush -Pmicronaut.docker.image=docker.io/${{ secrets.DOCKER_USERNAME }}/time-service:${{ github.sha }}
+
+      - name: Update GitOps Repo (Deploy)
+        run: |
+          # 1. Clone your deployment repo
+          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/your-user/my-app-deploy.git
+          cd my-app-deploy
+          
+          # 2. Update the image tag in your deployment.yaml
+          # This uses 'sed' to replace the image line
+          sed -i "s|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/time-service:${{ github.sha }}|g" k8s/time-service/deployment.yaml
+          
+          # 3. Commit and push back to GitOps repo
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Bump time-service image to ${{ github.sha }}"
+          git push
