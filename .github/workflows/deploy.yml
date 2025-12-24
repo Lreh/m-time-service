@@ -48,14 +48,20 @@ jobs:
           docker push docker.io/${{ secrets.DOCKER_USERNAME }}/time-service:${{ github.sha }}
 
       - name: Update GitOps Repo (Deploy)
+        env:
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
+          # Check if token is set to avoid confusing auth errors
+          [ -z "$GITOPS_TOKEN" ] && { echo "Error: GITOPS_TOKEN secret is not set."; exit 1; }
+
           # 1. Clone your deployment repo
-          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/your-user/my-app-deploy.git
+          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/your-user/my-app-deploy.git
           cd my-app-deploy
           
           # 2. Update the image tag in your deployment.yaml
           # This uses 'sed' to replace the image line
-          sed -i "s|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/time-service:${{ github.sha }}|g" k8s/time-service/deployment.yaml
+          sed -i "s|image: .*|image: ${DOCKER_USERNAME}/time-service:${{ github.sha }}|g" k8s/time-service/deployment.yaml
           
           # 3. Commit and push back to GitOps repo
           git config user.name "GitHub Actions"
