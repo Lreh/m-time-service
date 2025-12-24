@@ -56,7 +56,7 @@ jobs:
           [ -z "$GITOPS_TOKEN" ] && { echo "Error: GITOPS_TOKEN secret is not set."; exit 1; }
 
           # 1. Clone your deployment repo
-          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/your-user/my-app-deploy.git
+          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/${{ github.repository_owner }}/my-app-deploy.git
           cd my-app-deploy
           
           # 2. Update the image tag in your deployment.yaml
