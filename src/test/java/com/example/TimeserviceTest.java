@@ -38,6 +38,7 @@ class TimeserviceTest {
         Assertions.assertNotNull(body);
         Assertions.assertEquals("micronaut-time-provider", body.get("service"));
         Assertions.assertNotNull(body.get("now"));
-    }
 
+    
+    }
 }
