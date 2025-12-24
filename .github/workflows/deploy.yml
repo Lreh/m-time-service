@@ -47,16 +47,17 @@ jobs:
         run: |
           docker push docker.io/${{ secrets.DOCKER_USERNAME }}/time-service:${{ github.sha }}
 
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
       - name: Update GitOps Repo (Deploy)
         env:
-          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          # Check if token is set to avoid confusing auth errors
-          [ -z "$GITOPS_TOKEN" ] && { echo "Error: GITOPS_TOKEN secret is not set."; exit 1; }
-
           # 1. Clone your deployment repo
-          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/${{ github.repository_owner }}/my-app-deploy.git
+          git clone git@github.com:${{ github.repository_owner }}/my-app-deploy.git
           cd my-app-deploy
           
           # 2. Update the image tag in your deployment.yaml
@@ -67,5 +68,5 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add .
-          git commit -m "Bump time-service image to ${{ github.sha }}"
-          git push
+          # Commit and push only if there are changes, otherwise exit gracefully
+          git commit -m "Bump time-service image to ${{ github.sha }}" && git push || echo "No changes to commit"
