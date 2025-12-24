@@ -31,7 +31,7 @@ java {
 
 // Optional: specific image naming
 tasks.named("dockerBuild") {
-    images = ["lreh/time-service:v1"]
+    images = ["lrehakdocker/time-service:v1"]
 }
 
 
