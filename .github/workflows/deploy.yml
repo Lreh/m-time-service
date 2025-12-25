@@ -1,8 +1,8 @@
-name: Build and Deploy
+name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ main ] # Runs every time you push to main
+    branches: [ "main" ]  # Runs every time you push to main
 
 jobs:
   build-and-push:
@@ -12,8 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
-      - name: Grant execute permission for gradlew
+
+      - name: Make gradlew executable
         run: chmod +x gradlew
 
       - name: Set up JDK 17
@@ -38,55 +38,21 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker Image
-        run: |
-          # Use GITHUB_SHA as a unique image tag
-          ./gradlew dockerBuild -Pmicronaut.docker.image=docker.io/${{ secrets.DOCKER_USERNAME }}/time-service:${{ github.sha }}
-
-      - name: Push Docker Image
-        run: |
-          docker push docker.io/${{ secrets.DOCKER_USERNAME }}/time-service:${{ github.sha }}
-
-      - name: Install Helm
-        run: |
-          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-          chmod 700 get_helm.sh
-          ./get_helm.sh --version v3.13.1
-
-      - name: Package and Push Helm Chart
-        env:
-          CHART_VERSION: 0.1.${{ github.run_number }}
-        run: |
-          helm registry login registry-1.docker.io -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          helm package charts/time-service --version $CHART_VERSION --app-version ${{ github.sha }}
-          helm push time-service-$CHART_VERSION.tgz oci://registry-1.docker.io/${{ secrets.DOCKER_USERNAME }}/charts
-
-      - name: Setup SSH Agent
-        uses: webfactory/ssh-agent@v0.9.0
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
         with:
-          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+          context: .
+          push: true
+          tags: |
+            lrehdocker/time-service:latest
+            lrehdocker/time-service:${{ github.run_number }}
 
-      - name: Update GitOps Repo (Deploy)
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          CHART_VERSION: 0.1.${{ github.run_number }}
-          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }} # You must add this secret to your repo
+      - name: Update Helm Chart Version
         run: |
-          # 1. Clone your deployment repo
-          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/${{ github.repository_owner }}/my-app-deploy.git
-          cd my-app-deploy
-          
-          # 2. Update the image tag in your values.yaml (Helm)
-          # This assumes you have a values.yaml with a 'tag:' field
-          sed -i "s|tag: .*|tag: ${{ github.sha }}|g" k8s/time-service/values.yaml
-          
-          # 3. Update Chart Version in Chart.yaml (if using a wrapper chart)
-          # This ensures the GitOps repo references the specific chart version we just pushed
-          [ -f k8s/time-service/Chart.yaml ] && sed -i "s|version: .*|version: $CHART_VERSION|g" k8s/time-service/Chart.yaml
-
-          # 4. Commit and push back to GitOps repo
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add .
-          # Commit and push only if there are changes, otherwise exit gracefully
-          git commit -m "Bump time-service image to ${{ github.sha }} and chart to $CHART_VERSION" && git push || echo "No changes to commit"
+          # 1. Update the appVersion in Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: \"${{ github.run_number }}\"/" charts/java-app/Chart.yaml
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add charts/java-app/Chart.yaml
+          git commit -m "chore: update appVersion to ${{ github.run_number }}"
+          git push
