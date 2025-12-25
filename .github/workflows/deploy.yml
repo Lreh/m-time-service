@@ -70,8 +70,8 @@ jobs:
         env:
           CHART_VERSION: 0.1.${{ github.run_number }}
         run: |
-          git clone git@github.com:${{ github.repository_owner }}/my-app-deploy.git
-          cd my-app-deploy
+          git clone git@github.com:${{ github.repository_owner }}/m-time-service.git
+          cd m-time-service
           
           # Update values.yaml
           sed -i "s|tag: .*|tag: ${{ github.sha }}|g" k8s/time-service/values.yaml
