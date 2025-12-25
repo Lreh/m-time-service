@@ -80,6 +80,13 @@ jobs:
           cd my-app-deploy
           
           # Update values.yaml
+          # Ensure directory and file exist to prevent sed errors on fresh repos
+          mkdir -p k8s/time-service
+          if [ ! -f k8s/time-service/values.yaml ]; then
+            echo "image:" > k8s/time-service/values.yaml
+            echo "  tag: placeholder" >> k8s/time-service/values.yaml
+          fi
+
           sed -i "s|tag: .*|tag: ${{ github.sha }}|g" k8s/time-service/values.yaml
           
           # Update Chart.yaml version in GitOps repo
