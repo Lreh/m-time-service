@@ -56,6 +56,7 @@ jobs:
       - name: Package and Push Helm Chart
         env:
           CHART_VERSION: 0.1.${{ github.run_number }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
           helm registry login registry-1.docker.io -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
           helm package charts/time-service --version $CHART_VERSION --app-version ${{ github.sha }}
