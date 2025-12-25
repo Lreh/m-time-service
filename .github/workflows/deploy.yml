@@ -70,9 +70,10 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           CHART_VERSION: 0.1.${{ github.run_number }}
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }} # You must add this secret to your repo
         run: |
           # 1. Clone your deployment repo
-          git clone git@github.com:${{ github.repository_owner }}/my-app-deploy.git
+          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/${{ github.repository_owner }}/my-app-deploy.git
           cd my-app-deploy
           
           # 2. Update the image tag in your values.yaml (Helm)
