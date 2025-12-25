@@ -71,6 +71,12 @@ jobs:
           CHART_VERSION: 0.1.${{ github.run_number }}
         run: |
           git clone git@github.com:${{ github.repository_owner }}/my-app-deploy.git
+          
+          if [ ! -d "my-app-deploy" ]; then
+            echo "Error: Failed to clone repository. Check if 'my-app-deploy' exists and DEPLOY_KEY has write access."
+            exit 1
+          fi
+
           cd my-app-deploy
           
           # Update values.yaml
