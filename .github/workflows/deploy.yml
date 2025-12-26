@@ -70,25 +70,6 @@ jobs:
 
       - name: Update GitOps Repo (Deploy)
         run: |
-          git clone git@github.com:${{ github.repository_owner }}/my-app-deploy.git
-          
-          if [ ! -d "my-app-deploy" ]; then
-            echo "Error: Failed to clone repository. Check if 'my-app-deploy' exists and DEPLOY_KEY has write access."
-            exit 1
-          fi
-
-          cd my-app-deploy
-          
-          # Update values.yaml
-          # Ensure directory and file exist to prevent sed errors on fresh repos
-          mkdir -p k8s/time-service
-          if [ ! -f k8s/time-service/values.yaml ]; then
-            echo "image:" > k8s/time-service/values.yaml
-            echo "  tag: placeholder" >> k8s/time-service/values.yaml
-          fi
-
-          sed -i "s|tag: .*|tag: ${{ github.sha }}|g" k8s/time-service/values.yaml
-          
           # Update Chart.yaml version in GitOps repo
           [ -f k8s/time-service/Chart.yaml ] && sed -i "s|version: .*|version: $CHART_VERSION|g" k8s/time-service/Chart.yaml
 
