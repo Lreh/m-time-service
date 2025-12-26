@@ -71,7 +71,7 @@ jobs:
       - name: Update GitOps Repo (Deploy)
         run: |
           # Update Chart.yaml version in GitOps repo
-          [ -f k8s/time-service/Chart.yaml ] && sed -i "s|version: .*|version: $CHART_VERSION|g" k8s/time-service/Chart.yaml
+          [ -f charts/time-service/Chart.yaml ] && sed -i "s|version: .*|version: $CHART_VERSION|g" charts/time-service/Chart.yaml
 
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
