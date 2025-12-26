@@ -1,7 +1,0 @@
-apiVersion: v2
-name: time-service-deploy
-version: 0.1.24
-dependencies:
-  - name: time-service
-    version: 0.1.24
-    repository: "oci://registry-1.docker.io/lrehdocker"
