@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      CHART_VERSION: 0.1.${{ github.run_number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,7 +57,6 @@ jobs:
 
       - name: Package and Push Helm Chart
         env:
-          CHART_VERSION: 0.1.${{ github.run_number }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
           helm registry login registry-1.docker.io -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
@@ -68,8 +69,6 @@ jobs:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Update GitOps Repo (Deploy)
-        env:
-          CHART_VERSION: 0.1.${{ github.run_number }}
         run: |
           git clone git@github.com:${{ github.repository_owner }}/my-app-deploy.git
           
