@@ -5,12 +5,17 @@ import io.micronaut.http.annotation.Get;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 public class TimeController {
 
+    private static final Logger LOG = LoggerFactory.getLogger(TimeController.class);
+
     @Get("/time")
     public Map<String, String> index() {
+        LOG.info("Request received for /time endpoint");
         return Map.of(
                 "now", ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME),
                 "service", "micronaut-time-provider"
@@ -19,6 +24,7 @@ public class TimeController {
 
     @Get("/health")
     public Map<String, String> health() {
+        // LOG.info("Health check requested");
         return Map.of("status", "UP");
     }
 }
