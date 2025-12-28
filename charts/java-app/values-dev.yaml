@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: time-service
+  repository: m-time-service
   pullPolicy: IfNotPresent
   tag: "latest"
 
