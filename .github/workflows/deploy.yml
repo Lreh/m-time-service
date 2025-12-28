@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      CHART_VERSION: 1.0.${{ github.run_number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,16 +47,51 @@ jobs:
           push: true
           tags: |
             lrehdocker/m-time-service:latest
-            lrehdocker/m-time-service:1.0.${{ github.run_number }}
+            lrehdocker/m-time-service:${{ env.CHART_VERSION }}
 
-      - name: Update Helm Chart Version
+      - name: Install Helm
         run: |
-          # 1. Update the appVersion in Chart.yaml
-          sed -i "s/^appVersion: .*/appVersion: \"1.0.${{ github.run_number }}\"/" charts/java-app/Chart.yaml
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add charts/java-app/Chart.yaml
-          git commit -m "chore: update appVersion to 1.0.${{ github.run_number }}"
-          git tag "1.0.${{ github.run_number }}"
-          git push origin "1.0.${{ github.run_number }}"
-          git push
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          ./get_helm.sh --version v3.13.1
+
+      - name: Package and Push Helm Chart
+        run: |
+          helm registry login registry-1.docker.io -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          helm package charts/java-app --version $CHART_VERSION --app-version $CHART_VERSION
+          helm push m-time-service-$CHART_VERSION.tgz oci://registry-1.docker.io/${{ secrets.DOCKER_USERNAME }}
+
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Update GitOps Repo (Deploy)
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: |
+          git clone git@github.com:${{ github.repository_owner }}/my-app-deploy.git
+          cd my-app-deploy
+          
+          mkdir -p k8s/m-time-service
+          cat <<EOF > k8s/m-time-service/Chart.yaml
+          apiVersion: v2
+          name: m-time-service-deploy
+          version: 0.1.0
+          dependencies:
+            - name: m-time-service
+              version: "$CHART_VERSION"
+              repository: "oci://registry-1.docker.io/${DOCKER_USERNAME}"
+          EOF
+
+          cat <<EOF > k8s/m-time-service/values.yaml
+          m-time-service:
+            image:
+              repository: docker.io/${DOCKER_USERNAME}/m-time-service
+              tag: "$CHART_VERSION"
+          EOF
+
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Bump m-time-service to $CHART_VERSION" && git push || echo "No changes to commit"
