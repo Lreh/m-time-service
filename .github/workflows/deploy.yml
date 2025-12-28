@@ -44,8 +44,8 @@ jobs:
           context: .
           push: true
           tags: |
-            lrehdocker/time-service:latest
-            lrehdocker/time-service:1.0.${{ github.run_number }}
+            lrehdocker/m-time-service:latest
+            lrehdocker/m-time-service:1.0.${{ github.run_number }}
 
       - name: Update Helm Chart Version
         run: |
