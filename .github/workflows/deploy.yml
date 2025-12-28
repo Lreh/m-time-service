@@ -74,22 +74,31 @@ jobs:
           cd my-app-deploy
           
           mkdir -p k8s/m-time-service
+          
+          # Write Chart.yaml with correct indentation
           cat <<EOF > k8s/m-time-service/Chart.yaml
           apiVersion: v2
           name: m-time-service-deploy
-          version: 0.1.0
+          version: $CHART_VERSION
           dependencies:
             - name: m-time-service
               version: "$CHART_VERSION"
               repository: "oci://registry-1.docker.io/${DOCKER_USERNAME}"
           EOF
 
+          # Write values.yaml with correct indentation
           cat <<EOF > k8s/m-time-service/values.yaml
           m-time-service:
             image:
               repository: docker.io/${DOCKER_USERNAME}/m-time-service
               tag: "$CHART_VERSION"
           EOF
+          
+          # Debug: Print generated files
+          echo "--- Generated Chart.yaml ---"
+          cat k8s/m-time-service/Chart.yaml
+          echo "--- Generated values.yaml ---"
+          cat k8s/m-time-service/values.yaml
 
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
