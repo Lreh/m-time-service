@@ -75,24 +75,11 @@ jobs:
           
           mkdir -p k8s/m-time-service
           
-          # Write Chart.yaml with correct indentation
-          cat <<EOF > k8s/m-time-service/Chart.yaml
-          apiVersion: v2
-          name: m-time-service-deploy
-          version: $CHART_VERSION
-          dependencies:
-            - name: m-time-service
-              version: "$CHART_VERSION"
-              repository: "oci://registry-1.docker.io/${DOCKER_USERNAME}"
-          EOF
+          # Write Chart.yaml using printf to avoid indentation issues
+          printf "apiVersion: v2\nname: m-time-service-deploy\nversion: %s\ndependencies:\n  - name: m-time-service\n    version: \"%s\"\n    repository: \"oci://registry-1.docker.io/%s\"\n" "$CHART_VERSION" "$CHART_VERSION" "$DOCKER_USERNAME" > k8s/m-time-service/Chart.yaml
 
-          # Write values.yaml with correct indentation
-          cat <<EOF > k8s/m-time-service/values.yaml
-          m-time-service:
-            image:
-              repository: docker.io/${DOCKER_USERNAME}/m-time-service
-              tag: "$CHART_VERSION"
-          EOF
+          # Write values.yaml using printf
+          printf "m-time-service:\n  image:\n    repository: docker.io/%s/m-time-service\n    tag: \"%s\"\n" "$DOCKER_USERNAME" "$CHART_VERSION" > k8s/m-time-service/values.yaml
           
           # Debug: Print generated files
           echo "--- Generated Chart.yaml ---"
