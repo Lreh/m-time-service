@@ -24,7 +24,6 @@ public class TimeController {
 
     @Get("/health")
     public Map<String, String> health() {
-        // LOG.info("Health check requested");
         return Map.of("status", "UP");
     }
 }
