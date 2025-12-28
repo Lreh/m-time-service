@@ -46,8 +46,8 @@ jobs:
           context: .
           push: true
           tags: |
-            lrehdocker/m-time-service:latest
-            lrehdocker/m-time-service:${{ env.CHART_VERSION }}
+            ${{ secrets.DOCKER_USERNAME }}/m-time-service:latest
+            ${{ secrets.DOCKER_USERNAME }}/m-time-service:${{ env.CHART_VERSION }}
 
       - name: Install Helm
         run: |
