@@ -15,7 +15,11 @@ public class TimeController {
 
     @Get("/time")
     public Map<String, String> index() {
-        LOG.info("Request received for /time endpoint");
+        LOG.info("""
+                Request received for /time endpoint          
+                kubectl port-forward svc/time-service 8050:8080
+                localhost:8050/time""");
+
         return Map.of(
                 "now", ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME),
                 "service", "micronaut-time-provider"
