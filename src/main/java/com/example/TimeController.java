@@ -17,7 +17,7 @@ public class TimeController {
     public Map<String, String> index() {
         LOG.info("""
                 Request received for /time endpoint          
-                kubectl port-forward svc/time-service 8050:8080
+                kubectl port-forward svc/m-time-service 8050:8080
                 localhost:8050/time""");
 
         return Map.of(
