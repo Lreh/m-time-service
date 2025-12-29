@@ -14,11 +14,11 @@ public class TimeController {
 
     private static final Logger LOG = LoggerFactory.getLogger(TimeController.class);
 
-    @Value("${environment:default}")
-    String environment;
-
-    @Value("${logLevel:INFO}")
-    String logLevel;
+//    @Value("${environment:default}")
+//    String environment;
+//
+//    @Value("${logLevel:INFO}")
+//    String logLevel;
 
     @Get("/time")
     public Map<String, String> index() {
@@ -29,9 +29,9 @@ public class TimeController {
 
         return Map.of(
                 "now", ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME),
-                "service", "micronaut-time-provider",
-                "environment", environment,
-                "logLevel", logLevel
+                "service", "micronaut-time-provider"
+//                "environment", environment,
+//                "logLevel", logLevel
         );
     }
 
