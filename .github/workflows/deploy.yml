@@ -46,48 +46,17 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/m-time-service:latest
-            ${{ secrets.DOCKER_USERNAME }}/m-time-service:${{ env.CHART_VERSION }}
+            lrehdocker/m-time-service:latest
+            lrehdocker/m-time-service:1.0.${{ github.run_number }}
 
-      - name: Install Helm
+      - name: Update Helm Chart Version
         run: |
-          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-          chmod 700 get_helm.sh
-          ./get_helm.sh --version v3.13.1
-
-      - name: Package and Push Helm Chart
-        run: |
-          helm registry login registry-1.docker.io -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          helm package charts/java-app --version $CHART_VERSION --app-version $CHART_VERSION
-          helm push m-time-service-$CHART_VERSION.tgz oci://registry-1.docker.io/${{ secrets.DOCKER_USERNAME }}
-
-      - name: Setup SSH Agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
-
-      - name: Update GitOps Repo (Deploy)
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        run: |
-          git clone git@github.com:${{ github.repository_owner }}/my-app-deploy.git
-          cd my-app-deploy
-          
-          mkdir -p k8s/m-time-service
-          
-          # Write Chart.yaml using printf to avoid indentation issues
-          printf "apiVersion: v2\nname: m-time-service-deploy\nversion: %s\ndependencies:\n  - name: m-time-service\n    version: \"%s\"\n    repository: \"oci://registry-1.docker.io/%s\"\n" "$CHART_VERSION" "$CHART_VERSION" "$DOCKER_USERNAME" > k8s/m-time-service/Chart.yaml
-
-          # Write values.yaml using printf
-          printf "m-time-service:\n  image:\n    repository: docker.io/%s/m-time-service\n    tag: \"%s\"\n" "$DOCKER_USERNAME" "$CHART_VERSION" > k8s/m-time-service/values.yaml
-          
-          # Debug: Print generated files
-          echo "--- Generated Chart.yaml ---"
-          cat k8s/m-time-service/Chart.yaml
-          echo "--- Generated values.yaml ---"
-          cat k8s/m-time-service/values.yaml
-
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add .
-          git commit -m "Bump m-time-service to $CHART_VERSION" && git push || echo "No changes to commit"
+          # 1. Update the appVersion in Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: \"1.0.${{ github.run_number }}\"/" charts/java-app/Chart.yaml
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add charts/java-app/Chart.yaml
+          git commit -m "chore: update appVersion to 1.0.${{ github.run_number }}"
+          git tag "1.0.${{ github.run_number }}"
+          git push origin "1.0.${{ github.run_number }}"
+          git push
